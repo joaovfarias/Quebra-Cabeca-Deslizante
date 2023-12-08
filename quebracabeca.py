@@ -8,6 +8,8 @@ class Nodo:
     self.pai = pai
     self.filhos = []
     self.level = 0
+    self.custo_f = 0
+    self.heuristicaPosErrada = 0
 
   def addFilho(self, filho):
     self.filhos.append(filho)
@@ -155,6 +157,45 @@ def GerarArvoreDLS(root, levelLimit):
 
   return None
 
+def HeuristicaPosErrada(nodo):
+    lista = nodo.quebraCabeca.tabuleiro.ravel().tolist()
+
+    posicoesErradas = 0
+
+    for i in range(len(lista)-1):
+      if lista[i] != i+1:
+        posicoesErradas += 1
+
+    return posicoesErradas
+
+
+def GerarArvoreAStar(root):
+    heap = []
+
+    heap.append(root)
+
+    while heap:
+        heap.sort(key=lambda x: x.custo_f)
+        pop = heap.pop(0)
+
+        if pop.quebraCabeca.VerificarJogo():
+            return pop
+
+        movimentos_possiveis = pop.quebraCabeca.MovimentosPossiveis()
+
+        filho = 0
+        for movimento in movimentos_possiveis:
+            pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
+            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+            pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
+            pop.filhos[filho].level = pop.level + 1
+            pop.filhos[filho].heuristicaPosErrada = HeuristicaPosErrada(pop.filhos[filho])
+            pop.filhos[filho].custo_f = pop.filhos[filho].level + pop.filhos[filho].heuristicaPosErrada
+            heap.append(pop.filhos[filho])
+            filho += 1
+
+    return None
+
 def MostrarCaminho(nodo, passos):
   if (not nodo):
     if (passos == -1):
@@ -176,15 +217,17 @@ def main():
     lado = 4
     quebraCabecaInicial = QuebraCabeca(lado)
     quebraCabecaInicial.Embaralhar(15)
-
+    
     raiz = Nodo(quebraCabecaInicial, None)
+
     flag = 1
 
     while (flag):
         print("1- Busca em largura")
         print("2- Busca em profundidade")
         print("3- Busca em profundidade limitada")
-        print("4- Sair")
+        print("4- Busca A*")
+        print("5- Sair")
         ans = int(input("Opcão: "))
         match ans:
             case 1:
@@ -204,6 +247,11 @@ def main():
                 end = time.time()
                 print(f"Tempo: {end - start}s")
             case 4:
+                start = time.time()
+                MostrarCaminho(GerarArvoreAStar(raiz), -1)
+                end = time.time()
+                print(f"Tempo: {end - start}s")
+            case 5:
                 flag = 0
             case _:
                 print("Valor inválido")
