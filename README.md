@@ -1,4 +1,4 @@
-# FIA-Buscas
+# Quebra-Cabeça Deslizante
 Desenvolvimento de algoritmos de busca listados abaixo para solucionar o clássico jogo do Quebra-cabeça Deslizante.
 
 Algoritmos necessários:
