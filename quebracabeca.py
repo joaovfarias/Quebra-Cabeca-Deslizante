@@ -15,7 +15,6 @@ class Nodo:
     self.filhos.append(filho)
     return filho
 
-
 class QuebraCabeca:
   def __init__(self, lado):
     self.lado = lado
@@ -91,17 +90,12 @@ def GerarArvoreBFS(root):
 
       filho = 0
       for movimento in mv:
-        if (pop.pai == None):
+        if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
           pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
           pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
           pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
           queue.append(pop.filhos[filho])
-          filho += 1
-        elif (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
-          pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
-          pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-          queue.append(pop.filhos[filho])
+          pop.filhos[filho].level = pop.level + 1
           filho += 1
 
 def GerarArvoreDFS(root):
@@ -115,59 +109,38 @@ def GerarArvoreDFS(root):
 
       filho = 0
       for movimento in mv:
-        if (pop.pai == None):
+        if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
           pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
           pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
           pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
           stack.append(pop.filhos[filho])
-          filho += 1
-        elif (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
-          pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
-          pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-          stack.append(pop.filhos[filho])
+          pop.filhos[filho].level = pop.level + 1
           filho += 1
 
 def GerarArvoreDLS(root, levelLimit):
   stack = []
   stack.append(root)
+
   while(stack):
      pop = stack.pop(-1)
+
      if (pop.quebraCabeca.VerificarJogo()):
         return pop
+     
      if (pop.level < levelLimit):
         mv = pop.quebraCabeca.MovimentosPossiveis()
 
         filho = 0
-        for movimento in mv:
-           if (pop.pai == None):
-             pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-             pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
-             pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-             stack.append(pop.filhos[filho])
-             pop.filhos[filho].level = pop.level + 1
-             filho += 1
-           elif (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
-             pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-             pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
-             pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-             stack.append(pop.filhos[filho])
-             pop.filhos[filho].level = pop.level + 1
-             filho += 1
+        for movimento in mv:            
+          if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
+            pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
+            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+            pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
+            stack.append(pop.filhos[filho])
+            pop.filhos[filho].level = pop.level + 1
+            filho += 1
 
   return None
-
-def HeuristicaPosErrada(nodo):
-    lista = nodo.quebraCabeca.tabuleiro.ravel().tolist()
-
-    posicoesErradas = 0
-
-    for i in range(len(lista)-1):
-      if lista[i] != i+1:
-        posicoesErradas += 1
-
-    return posicoesErradas
-
 
 def GerarArvoreAStar(root):
     heap = []
@@ -195,6 +168,17 @@ def GerarArvoreAStar(root):
             filho += 1
 
     return None
+
+def HeuristicaPosErrada(nodo):
+    lista = nodo.quebraCabeca.tabuleiro.ravel().tolist()
+
+    posicoesErradas = 0
+
+    for i in range(len(lista)-1):
+      if lista[i] != i+1:
+        posicoesErradas += 1
+
+    return posicoesErradas
 
 def MostrarCaminho(nodo, passos):
   if (not nodo):
