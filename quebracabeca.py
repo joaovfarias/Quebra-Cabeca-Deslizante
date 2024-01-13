@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import time
-
+import math
 class Nodo:
   def __init__(self, quebraCabeca, pai):
     self.quebraCabeca = quebraCabeca
@@ -10,6 +10,7 @@ class Nodo:
     self.level = 0
     self.custo_f = 0
     self.heuristicaPosErrada = 0
+    self.heuristicaDistanciaManhattan = 0
 
   def addFilho(self, filho):
     self.filhos.append(filho)
@@ -18,15 +19,15 @@ class Nodo:
 class QuebraCabeca:
   def __init__(self, lado):
     self.lado = lado
-    self.LinhaVazio = lado-1
-    self.ColunaVazio = lado-1
+    self.linhaVazio = lado-1
+    self.colunaVazio = lado-1
     self.tabuleiro = np.arange(1,self.lado*self.lado+1)
     self.tabuleiro = np.reshape(self.tabuleiro,(self.lado,self.lado))
-    self.tabuleiro[self.LinhaVazio][self.ColunaVazio] = 0
+    self.tabuleiro[self.linhaVazio][self.colunaVazio] = 0
 
   def SetTabuleiro(self, tabuleiro, linha, coluna):
-    self.LinhaVazio = linha
-    self.ColunaVazio = coluna
+    self.linhaVazio = linha
+    self.colunaVazio = coluna
     self.tabuleiro = np.array(tabuleiro)
 
   def Imprime(self):
@@ -35,49 +36,54 @@ class QuebraCabeca:
   def MovimentosPossiveis(self):
     ListaMovimentosPossiveis = []
 
-    # Para Esquerda
-    if self.ColunaVazio > 0:
-        ListaMovimentosPossiveis.append((self.LinhaVazio, self.ColunaVazio-1))
+    # Esquerda
+    if self.colunaVazio > 0:
+        ListaMovimentosPossiveis.append((self.linhaVazio, self.colunaVazio-1))
 
-    # Para Direita
-    if self.ColunaVazio < (self.lado - 1):
-        ListaMovimentosPossiveis.append((self.LinhaVazio, self.ColunaVazio+1))
+    # Direita
+    if self.colunaVazio < (self.lado - 1):
+        ListaMovimentosPossiveis.append((self.linhaVazio, self.colunaVazio+1))
 
-    # Para cima
-    if self.LinhaVazio > 0:
-        ListaMovimentosPossiveis.append((self.LinhaVazio-1, self.ColunaVazio))
+    # Cima
+    if self.linhaVazio > 0:
+        ListaMovimentosPossiveis.append((self.linhaVazio-1, self.colunaVazio))
 
-    # Para baixo
-    if self.LinhaVazio < (self.lado - 1):
-        ListaMovimentosPossiveis.append((self.LinhaVazio+1, self.ColunaVazio))
+    # Baixo
+    if self.linhaVazio < (self.lado - 1):
+        ListaMovimentosPossiveis.append((self.linhaVazio+1, self.colunaVazio))
 
     return ListaMovimentosPossiveis
 
   def Embaralhar(self, vezes):
-    posicaoAnterior = (self.LinhaVazio,self.ColunaVazio)
+    posicaoAnterior = (self.linhaVazio,self.colunaVazio)
 
-    for i in range(vezes):
+    for _ in range(vezes):
       posicaoSorteada = random.choice(self.MovimentosPossiveis())
 
       while (posicaoSorteada == posicaoAnterior):
         posicaoSorteada = random.choice(self.MovimentosPossiveis())
 
-      posicaoAnterior = (self.LinhaVazio,self.ColunaVazio)
+      posicaoAnterior = (self.linhaVazio,self.colunaVazio)
       self.FazerMovimento(posicaoSorteada)
 
   def FazerMovimento(self, movimento):
     temp = self.tabuleiro[movimento]
     self.tabuleiro[movimento] = 0
-    self.tabuleiro[self.LinhaVazio][self.ColunaVazio] = temp
+    self.tabuleiro[self.linhaVazio][self.colunaVazio] = temp
 
-    self.LinhaVazio = movimento[0]
-    self.ColunaVazio = movimento[1]
+    self.linhaVazio = movimento[0]
+    self.colunaVazio = movimento[1]
 
     return movimento
 
   def VerificarJogo(self):
-    resolvido = QuebraCabeca(self.lado)
-    return np.array_equal(resolvido.tabuleiro, self.tabuleiro)
+    lista = self.tabuleiro.ravel().tolist()
+
+    for i in range(len(lista)-1):
+      if lista[i] != i+1:
+        return False
+    
+    return True
 
 def GerarArvoreBFS(root):
     queue = []
@@ -90,12 +96,12 @@ def GerarArvoreBFS(root):
 
       filho = 0
       for movimento in mv:
-        if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
+        if pop.pai is None or (pop.pai.quebraCabeca.linhaVazio, pop.pai.quebraCabeca.colunaVazio) != movimento:
           pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
           pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-          queue.append(pop.filhos[filho])
           pop.filhos[filho].level = pop.level + 1
+          queue.append(pop.filhos[filho])
           filho += 1
 
 def GerarArvoreDFS(root):
@@ -109,12 +115,12 @@ def GerarArvoreDFS(root):
 
       filho = 0
       for movimento in mv:
-        if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
+        if pop.pai is None or (pop.pai.quebraCabeca.linhaVazio, pop.pai.quebraCabeca.colunaVazio) != movimento:
           pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+          pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
           pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
-          stack.append(pop.filhos[filho])
           pop.filhos[filho].level = pop.level + 1
+          stack.append(pop.filhos[filho])
           filho += 1
 
 def GerarArvoreDLS(root, levelLimit):
@@ -132,17 +138,25 @@ def GerarArvoreDLS(root, levelLimit):
 
         filho = 0
         for movimento in mv:            
-          if pop.pai is None or (pop.pai.quebraCabeca.LinhaVazio, pop.pai.quebraCabeca.ColunaVazio) != movimento:
+          if pop.pai is None or (pop.pai.quebraCabeca.linhaVazio, pop.pai.quebraCabeca.colunaVazio) != movimento:
             pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
             pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
             stack.append(pop.filhos[filho])
             pop.filhos[filho].level = pop.level + 1
             filho += 1
 
   return None
+   
+def GerarArvoreIDS(root, end):
+  for i in range(end+1):
+    resultado = GerarArvoreDLS(root, i)
+    if resultado is not None:
+      return resultado
 
-def GerarArvoreAStar(root):
+  return None
+
+def GerarArvoreAStarPosErrada(root):
     heap = []
 
     heap.append(root)
@@ -159,15 +173,62 @@ def GerarArvoreAStar(root):
         filho = 0
         for movimento in movimentos_possiveis:
             pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
-            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.LinhaVazio, pop.quebraCabeca.ColunaVazio)
+            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
             pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
             pop.filhos[filho].level = pop.level + 1
             pop.filhos[filho].heuristicaPosErrada = HeuristicaPosErrada(pop.filhos[filho])
             pop.filhos[filho].custo_f = pop.filhos[filho].level + pop.filhos[filho].heuristicaPosErrada
+            
             heap.append(pop.filhos[filho])
             filho += 1
 
     return None
+
+def GerarArvoreAStarDistanciaManhattan(root):
+    heap = []
+
+    heap.append(root)
+
+    while heap:
+        heap.sort(key=lambda x: x.custo_f)
+        pop = heap.pop(0)
+
+        if pop.quebraCabeca.VerificarJogo():
+            return pop
+
+        movimentos_possiveis = pop.quebraCabeca.MovimentosPossiveis()
+
+        filho = 0
+        for movimento in movimentos_possiveis:
+            pop.addFilho(Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop))
+            pop.filhos[filho].quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
+            pop.filhos[filho].quebraCabeca.FazerMovimento(movimento)
+            pop.filhos[filho].level = pop.level + 1
+            pop.filhos[filho].heuristicaDistanciaManhattan = HeuristicaDistanciaManhattan(pop.filhos[filho])
+            pop.filhos[filho].custo_f = pop.filhos[filho].level + pop.filhos[filho].heuristicaDistanciaManhattan
+            
+            heap.append(pop.filhos[filho])
+            filho += 1
+
+    return None
+
+
+def HeuristicaDistanciaManhattan(nodo):
+    lista = nodo.quebraCabeca.tabuleiro.ravel().tolist()
+
+    distanciaManhattan = 0
+
+    for i in range(len(lista)):
+        if lista[i] != 0:
+            linhaAtual = i // nodo.quebraCabeca.lado
+            linhaEsperada = (lista[i] - 1) // nodo.quebraCabeca.lado
+
+            colunaAtual = i % nodo.quebraCabeca.lado
+            colunaEsperada = (lista[i] - 1) % nodo.quebraCabeca.lado
+
+            distanciaManhattan += abs(  linhaAtual - linhaEsperada ) + abs( colunaAtual - colunaEsperada )
+
+    return distanciaManhattan
 
 def HeuristicaPosErrada(nodo):
     lista = nodo.quebraCabeca.tabuleiro.ravel().tolist()
@@ -180,6 +241,7 @@ def HeuristicaPosErrada(nodo):
 
     return posicoesErradas
 
+
 def MostrarCaminho(nodo, passos):
   if (not nodo):
     if (passos == -1):
@@ -191,28 +253,32 @@ def MostrarCaminho(nodo, passos):
 
   MostrarCaminho(nodo.pai, passos+1)
 
-  if nodo.pai == None:
-    print("Estado inicial: ")
   print(nodo.quebraCabeca.tabuleiro)
+  print("") 
+  print("".join("  " for _ in range(math.ceil(nodo.quebraCabeca.lado / 2))) + "↓")
   print("")
 
-
 def main():
-    lado = 4
+    lado = int(input("Informe o tamanho do lado do quebra-cabeça: "))
+    embaralhar = int(input("Informe o número de embaralhamentos: "))
+
     quebraCabecaInicial = QuebraCabeca(lado)
-    quebraCabecaInicial.Embaralhar(15)
-    
+    quebraCabecaInicial.Embaralhar(embaralhar)
     raiz = Nodo(quebraCabecaInicial, None)
 
     flag = 1
 
     while (flag):
+        print("-----------------------------------------------------")
         print("1- Busca em largura")
         print("2- Busca em profundidade")
         print("3- Busca em profundidade limitada")
-        print("4- Busca A*")
-        print("5- Sair")
+        print("4- Busca em profundidade iterativa")
+        print("5- Busca A* com heurística de peças fora do lugar")
+        print("6- Busca A* com heurística de distância de Manhattan")
+        print("7- Sair")
         ans = int(input("Opcão: "))
+        print("-----------------------------------------------------")
         match ans:
             case 1:
                 start = time.time()
@@ -231,16 +297,25 @@ def main():
                 end = time.time()
                 print(f"Tempo: {end - start}s")
             case 4:
+                limite = int(input("Limite para iteraçao: "))
                 start = time.time()
-                MostrarCaminho(GerarArvoreAStar(raiz), -1)
+                MostrarCaminho(GerarArvoreIDS(raiz, limite), -1)
                 end = time.time()
                 print(f"Tempo: {end - start}s")
             case 5:
+                start = time.time()
+                MostrarCaminho(GerarArvoreAStarPosErrada(raiz), -1)
+                end = time.time()
+                print(f"Tempo: {end - start}s")
+            case 6:
+                start = time.time()
+                MostrarCaminho(GerarArvoreAStarDistanciaManhattan(raiz), -1)
+                end = time.time()
+                print(f"Tempo: {end - start}s")
+            case 7:
                 flag = 0
             case _:
                 print("Valor inválido")
-
-
 
 if __name__ == "__main__":
     main()
