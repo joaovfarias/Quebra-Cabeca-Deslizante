@@ -109,23 +109,32 @@ def GerarArvoreBFS(root):
 
 def GerarArvoreDFS(root):
     stack = []
+    visited_states = set()
     stack.append(root)
 
-    while(stack):
-      pop = stack.pop(-1)
+    while stack:
+        pop = stack.pop(-1)
 
-      if (pop.quebraCabeca.VerificarJogo()):
-        return pop
-      
-      movimentosPossiveis = pop.quebraCabeca.MovimentosPossiveis()
+        if pop.quebraCabeca.VerificarJogo(): 
+            return pop
+        
+        # Converte a matriz para uma tupla
+        tabuleiro_tupla = tuple(map(tuple, pop.quebraCabeca.tabuleiro))
 
-      for movimento in movimentosPossiveis:
-        if pop.pai is None or (pop.pai.quebraCabeca.linhaVazio, pop.pai.quebraCabeca.colunaVazio) != movimento:
-          filho = Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop)
-          filho.quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
-          filho.quebraCabeca.FazerMovimento(movimento)
-          pop.addFilho(filho)
-          stack.append(filho)
+        if tabuleiro_tupla in visited_states:
+            continue  
+        
+        visited_states.add(tabuleiro_tupla)
+
+        movimentosPossiveis = pop.quebraCabeca.MovimentosPossiveis()
+
+        for movimento in movimentosPossiveis:
+            if pop.pai is None or (pop.pai.quebraCabeca.linhaVazio, pop.pai.quebraCabeca.colunaVazio) != movimento:
+                filho = Nodo(QuebraCabeca(pop.quebraCabeca.lado), pop)
+                filho.quebraCabeca.SetTabuleiro(pop.quebraCabeca.tabuleiro, pop.quebraCabeca.linhaVazio, pop.quebraCabeca.colunaVazio)
+                filho.quebraCabeca.FazerMovimento(movimento)
+                pop.addFilho(filho)
+                stack.append(filho)
 
 def GerarArvoreDLS(root, levelLimit):
   stack = []
