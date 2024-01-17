@@ -109,22 +109,21 @@ def GerarArvoreBFS(root):
 
 def GerarArvoreDFS(root):
     stack = []
-    visited_states = set()
     stack.append(root)
-
+    estados_visitados = set()
+    
     while stack:
         pop = stack.pop(-1)
 
         if pop.quebraCabeca.VerificarJogo(): 
             return pop
         
-        # Converte a matriz para uma tupla
         tabuleiro_tupla = tuple(map(tuple, pop.quebraCabeca.tabuleiro))
 
-        if tabuleiro_tupla in visited_states:
+        if tabuleiro_tupla in estados_visitados:
             continue  
         
-        visited_states.add(tabuleiro_tupla)
+        estados_visitados.add(tabuleiro_tupla)
 
         movimentosPossiveis = pop.quebraCabeca.MovimentosPossiveis()
 
